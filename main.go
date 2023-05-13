@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"strings"
 
 	jwt "github.com/golang-jwt/jwt/v4"
 	"crypto/rand"
@@ -58,21 +59,24 @@ func verifyToken(tokenString string) (*jwt.Token, error) {
 
 func checkOrigin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("New node have connected on ", r.RemoteAddr)
+		log.Println("New node have connected on", r.RemoteAddr, strings.Split(r.RemoteAddr, ":")[0])
 		origin := r.Header.Get("Origin")
-		if origin != "https://notebook.sanchezcarlosjr.com" {
+		if origin != "https://notebook.sanchezcarlosjr.com" &&  origin != "http://notebook.sanchezcarlosjr.com" {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 			return
 		}
-		w.Header().Set("Access-Control-Allow-Origin", "notebook.sanchezcarlosjr.com")
-		w.Header().Set("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "*")
+		userIp := strings.Split(r.RemoteAddr, ":")[0]
+		if userIp != "127.0.0.1" && userIp != "::1" {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-
 		next.ServeHTTP(w, r)
 	})
 }
@@ -80,6 +84,7 @@ func checkOrigin(next http.Handler) http.Handler {
 func checkAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tokenString := r.Header.Get("Authorization")
+		tokenString = strings.Split(tokenString, "Bearer ")[1]
 		if tokenString == "" {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
@@ -150,8 +155,8 @@ func main() {
 
 	go updateTokenPeriodically()
 
-	handler := http.HandlerFunc(handler)
-	http.Handle("/", checkAuth(checkOrigin(handler)))
+	handler2 := http.HandlerFunc(handler)
+	http.Handle("/", checkOrigin(checkAuth(handler2)))
 	
 	url := "localhost:8382"
 	log.Print("Listening on: ", url)
