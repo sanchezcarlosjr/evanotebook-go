@@ -58,17 +58,14 @@ func verifyToken(tokenString string) (*jwt.Token, error) {
 
 func checkOrigin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.RemoteAddr != "127.0.0.1" || r.RemoteAddr != "::1" {
-			http.Error(w, "Forbidden", http.StatusForbidden)
-			return
-		}
+		log.Println("New node have connected on ", r.RemoteAddr)
 		origin := r.Header.Get("Origin")
 		if origin != "https://notebook.sanchezcarlosjr.com" {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 			return
 		}
-		w.Header().Set("Access-Control-Allow-Origin", origin)
-		w.Header().Set("Access-Control-Allow-Methods", "POST")
+		w.Header().Set("Access-Control-Allow-Origin", "notebook.sanchezcarlosjr.com")
+		w.Header().Set("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
 		if r.Method == http.MethodOptions {
@@ -155,5 +152,8 @@ func main() {
 
 	handler := http.HandlerFunc(handler)
 	http.Handle("/", checkAuth(checkOrigin(handler)))
-	http.ListenAndServe("localhost:8382", nil)
+	
+	url := "localhost:8382"
+	log.Print("Listening on: ", url)
+	http.ListenAndServe(url, nil)
 }
