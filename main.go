@@ -57,11 +57,20 @@ func verifyToken(tokenString string) (*jwt.Token, error) {
 	})
 }
 
+var origins = map[string]bool {
+	"https://notebook.sanchezcarlosjr.com": true,
+	"https://n.sanchezcarlosjr.com": true,
+	"https://ipfsnotebook.sanchezcarlosjr.com": true,
+	"http://localhost:4200": true,
+	"https://webcontainer.web.app": true,
+}
+
 func checkOrigin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("New node have connected on", r.RemoteAddr, strings.Split(r.RemoteAddr, ":")[0])
+		log.Println("New node have connected on", r.RemoteAddr)
 		origin := r.Header.Get("Origin")
-		if origin != "https://notebook.sanchezcarlosjr.com" &&  origin != "http://notebook.sanchezcarlosjr.com" {
+		_, ok := origins[origin]
+		if !ok {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 			return
 		}
