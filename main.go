@@ -2,17 +2,20 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
-	"os/exec"
-	"runtime"
 	"fmt"
 	"log"
 	"net/http"
-	"time"
+	"os/exec"
+	"runtime"
 	"strings"
-
+	"time"
+	"os"
+	"text/tabwriter"
+	
 	jwt "github.com/golang-jwt/jwt/v4"
+	"github.com/iris-contrib/middleware/cors"
 	"crypto/rand"
+	"github.com/kataras/iris/v12"
 )
 
 type Command struct {
@@ -21,6 +24,7 @@ type Command struct {
 
 type Response struct {
 	Stdout string `json:"stdout"`
+	Stderr  string `json:"stderr,omitempty"`
 }
 
 var signingKey []byte
@@ -57,94 +61,67 @@ func verifyToken(tokenString string) (*jwt.Token, error) {
 	})
 }
 
-var origins = map[string]bool {
-	"https://notebook.sanchezcarlosjr.com": true,
-	"https://n.sanchezcarlosjr.com": true,
-	"https://ipfsnotebook.sanchezcarlosjr.com": true,
-	"http://localhost:4200": true,
-	"https://webcontainer.web.app": true,
+func checkOrigin(ctx iris.Context) {
+	userIp := strings.Split(ctx.RemoteAddr(), ":")[0]
+	if userIp != "127.0.0.1" && userIp != "::1" {
+		ctx.StatusCode(http.StatusForbidden)
+		return
+	}
+	ctx.Next()
 }
 
-func checkOrigin(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("New node have connected on", r.RemoteAddr)
-		origin := r.Header.Get("Origin")
-		_, ok := origins[origin]
-		if !ok {
-			http.Error(w, "Forbidden", http.StatusForbidden)
-			return
-		}
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "*")
-		userIp := strings.Split(r.RemoteAddr, ":")[0]
-		if userIp != "127.0.0.1" && userIp != "::1" {
-			http.Error(w, "Forbidden", http.StatusForbidden)
-			return
-		}
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-}
+func checkAuth(ctx iris.Context) {
+	tokenString := ctx.GetHeader("Authorization")
+	tokens := strings.Split(tokenString, "Bearer ")
+	if len(tokens) != 2 {
+		ctx.StatusCode(http.StatusUnauthorized)
+		return
+	}
+	tokenString = tokens[1]
+	if tokenString == "" {
+		ctx.StatusCode(http.StatusUnauthorized)
+		return
+	}
 
-func checkAuth(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tokenString := r.Header.Get("Authorization")
-		tokenString = strings.Split(tokenString, "Bearer ")[1]
-		if tokenString == "" {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-	
-		token, err := verifyToken(tokenString)
-		if err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-	
-		if !token.Valid {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-		
-		next.ServeHTTP(w, r)
-	})
-}
-
-func handler(w http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(r.Body)
-	var cmd Command
-	err := decoder.Decode(&cmd)
+	token, err := verifyToken(tokenString)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		ctx.StatusCode(http.StatusUnauthorized)
+		return
+	}
+
+	if !token.Valid {
+		ctx.StatusCode(http.StatusUnauthorized)
+		return
+	}
+
+	ctx.Next()
+}
+
+func execShell(ctx iris.Context) {
+	var cmd Command
+	if err := ctx.ReadJSON(&cmd); err != nil {
+		ctx.StatusCode(http.StatusBadRequest)
+		ctx.WriteString(err.Error())
 		return
 	}
 
 	var stdout []byte
+	var err error
 	if runtime.GOOS == "windows" {
 		stdout, err = exec.Command("powershell", "-Command", cmd.Command).Output()
 	} else {
 		stdout, err = exec.Command("/bin/sh", "-c", cmd.Command).Output()
 	}
 
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	response := Response{
 		Stdout: string(bytes.TrimSpace(stdout)),
 	}
 
-	encoder := json.NewEncoder(w)
-	err = encoder.Encode(response)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		response.Stderr = err.Error()
 	}
+
+	ctx.JSON(response)
 }
 
 func updateTokenPeriodically() {
@@ -159,15 +136,49 @@ func updateTokenPeriodically() {
 	}
 }
 
+func writeDocs(url string) {
+	w := new(tabwriter.Writer)
+	w.Init(os.Stdout, 0, 8, 2, '\t', 0)
+	fmt.Fprintln(w, "URL\tMethod\tContent-Type\tbody\t")
+	fmt.Fprintln(w, "http://"+url+"/v1/shell\tPOST\tJSON\t{command: string}\t")
+	w.Flush()
+}
+
 func main() {
-	signingKey, _ = generateRandomSigningKey(10)
+	app := iris.New()
+
+	var err error
+	signingKey, err = generateRandomSigningKey(10)
+	if err != nil {
+			log.Fatalf("Error generating signing key: %v", err)
+			return
+	}
+
+	app.UseGlobal(checkOrigin)
+	app.Use(checkAuth)
+
+	app.UseRouter(cors.New(cors.Options{
+		AllowedOrigins:   []string{
+			"https://notebook.sanchezcarlosjr.com",
+			"https://n.sanchezcarlosjr.com",
+			"https://ipfsnotebook.sanchezcarlosjr.com",
+			"http://localhost:4200",
+			"https://webcontainer.web.app",
+		},
+		AllowedHeaders: []string{"Authorization", "Content-Type"},
+		AllowCredentials: true,
+	}))
+
+	v1 := app.Party("/v1")
+    {
+        v1.Post("/shell", execShell)
+    }
+
+	url := "localhost:8382"
+
+	writeDocs(url)
 
 	go updateTokenPeriodically()
 
-	handler2 := http.HandlerFunc(handler)
-	http.Handle("/", checkOrigin(checkAuth(handler2)))
-	
-	url := "localhost:8382"
-	log.Print("Listening on: ", url)
-	http.ListenAndServe(url, nil)
+	app.Run(iris.Addr(url))
 }
