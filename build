@@ -1,0 +1,9 @@
+#!/bin/bash
+
+while IFS= read -r line
+do
+  goos=$(echo "$line" | cut -d '-' -f 3)
+  goarch=$(echo "$line" | cut -d '-' -f 4 | cut -d '.' -f 1)
+  outputfile=$(echo "$line")
+  GOOS="$goos" GOARCH="$goarch" go build -o "$outputfile" >out.log 2>err.log
+done < plataforms.txt
