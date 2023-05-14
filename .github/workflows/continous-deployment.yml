@@ -5,6 +5,9 @@ on:
     tags:
       - '*'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,7 +29,7 @@ jobs:
 
       - name: Create Release
         id: create_release
-        uses: actions/create-a-release-in-a-github-action@v2.0.5
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
