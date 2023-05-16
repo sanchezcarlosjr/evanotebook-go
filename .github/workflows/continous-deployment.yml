@@ -38,15 +38,15 @@ jobs:
       - name: Get Release ID
         id: get_release_id
         run: echo "RELEASE_ID=${{ steps.create_release.outputs.release_id }}" >> $GITHUB_ENV
-
+      
       - name: Attach android amd64 Build to Release
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: evanotebook-relay-android-amd64.exe
-          asset_name: evanotebook-relay-android-amd64.exe
+          asset_path: evanotebook-relay-android-amd64.apk
+          asset_name: evanotebook-relay-android-amd64.apk
           asset_content_type: application/octet-stream
       - name: Attach android arm64 Build to Release
         uses: actions/upload-release-asset@v1
@@ -54,17 +54,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: evanotebook-relay-android-arm64.exe
-          asset_name: evanotebook-relay-android-arm64.exe
-          asset_content_type: application/octet-stream
+          asset_path: evanotebook-relay-android-arm64.apk
+          asset_name: evanotebook-relay-android-arm64.apk
+          asset_content_type: application/vnd.android.package-archive
       - name: Attach darwin amd64 Build to Release
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: evanotebook-relay-darwin-amd64.exe
-          asset_name: evanotebook-relay-darwin-amd64.exe
+          asset_path: evanotebook-relay-darwin-amd64.dmg
+          asset_name: evanotebook-relay-darwin-amd64.dmg
           asset_content_type: application/octet-stream
       - name: Attach darwin arm64 Build to Release
         uses: actions/upload-release-asset@v1
@@ -72,8 +72,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: evanotebook-relay-darwin-arm64.exe
-          asset_name: evanotebook-relay-darwin-arm64.exe
+          asset_path: evanotebook-relay-darwin-arm64.dmg
+          asset_name: evanotebook-relay-darwin-arm64.dmg
           asset_content_type: application/octet-stream
       - name: Attach freebsd 386 Build to Release
         uses: actions/upload-release-asset@v1
@@ -81,8 +81,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: evanotebook-relay-freebsd-386.exe
-          asset_name: evanotebook-relay-freebsd-386.exe
+          asset_path: evanotebook-relay-freebsd-386
+          asset_name: evanotebook-relay-freebsd-386
           asset_content_type: application/octet-stream
       - name: Attach freebsd amd64 Build to Release
         uses: actions/upload-release-asset@v1
@@ -90,8 +90,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: evanotebook-relay-freebsd-amd64.exe
-          asset_name: evanotebook-relay-freebsd-amd64.exe
+          asset_path: evanotebook-relay-freebsd-amd64
+          asset_name: evanotebook-relay-freebsd-amd64
           asset_content_type: application/octet-stream
       - name: Attach freebsd arm Build to Release
         uses: actions/upload-release-asset@v1
@@ -99,8 +99,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: evanotebook-relay-freebsd-arm.exe
-          asset_name: evanotebook-relay-freebsd-arm.exe
+          asset_path: evanotebook-relay-freebsd-arm
+          asset_name: evanotebook-relay-freebsd-arm
           asset_content_type: application/octet-stream
       - name: Attach freebsd arm64 Build to Release
         uses: actions/upload-release-asset@v1
@@ -108,8 +108,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: evanotebook-relay-freebsd-arm64.exe
-          asset_name: evanotebook-relay-freebsd-arm64.exe
+          asset_path: evanotebook-relay-freebsd-arm64
+          asset_name: evanotebook-relay-freebsd-arm64
           asset_content_type: application/octet-stream
       - name: Attach freebsd riscv64 Build to Release
         uses: actions/upload-release-asset@v1
@@ -117,8 +117,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: evanotebook-relay-freebsd-riscv64.exe
-          asset_name: evanotebook-relay-freebsd-riscv64.exe
+          asset_path: evanotebook-relay-freebsd-riscv64
+          asset_name: evanotebook-relay-freebsd-riscv64
           asset_content_type: application/octet-stream
       - name: Attach linux 386 Build to Release
         uses: actions/upload-release-asset@v1
@@ -126,8 +126,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: evanotebook-relay-linux-386.exe
-          asset_name: evanotebook-relay-linux-386.exe
+          asset_path: evanotebook-relay-linux-386
+          asset_name: evanotebook-relay-linux-386
           asset_content_type: application/octet-stream
       - name: Attach linux amd64 Build to Release
         uses: actions/upload-release-asset@v1
@@ -135,8 +135,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: evanotebook-relay-linux-amd64.exe
-          asset_name: evanotebook-relay-linux-amd64.exe
+          asset_path: evanotebook-relay-linux-amd64
+          asset_name: evanotebook-relay-linux-amd64
           asset_content_type: application/octet-stream
       - name: Attach linux arm Build to Release
         uses: actions/upload-release-asset@v1
@@ -144,8 +144,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: evanotebook-relay-linux-arm.exe
-          asset_name: evanotebook-relay-linux-arm.exe
+          asset_path: evanotebook-relay-linux-arm
+          asset_name: evanotebook-relay-linux-arm
           asset_content_type: application/octet-stream
       - name: Attach linux arm64 Build to Release
         uses: actions/upload-release-asset@v1
@@ -153,8 +153,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: evanotebook-relay-linux-arm64.exe
-          asset_name: evanotebook-relay-linux-arm64.exe
+          asset_path: evanotebook-relay-linux-arm64
+          asset_name: evanotebook-relay-linux-arm64
           asset_content_type: application/octet-stream
       - name: Attach linux mips Build to Release
         uses: actions/upload-release-asset@v1
@@ -162,8 +162,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: evanotebook-relay-linux-mips.exe
-          asset_name: evanotebook-relay-linux-mips.exe
+          asset_path: evanotebook-relay-linux-mips
+          asset_name: evanotebook-relay-linux-mips
           asset_content_type: application/octet-stream
       - name: Attach linux mips64 Build to Release
         uses: actions/upload-release-asset@v1
@@ -171,8 +171,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: evanotebook-relay-linux-mips64.exe
-          asset_name: evanotebook-relay-linux-mips64.exe
+          asset_path: evanotebook-relay-linux-mips64
+          asset_name: evanotebook-relay-linux-mips64
           asset_content_type: application/octet-stream
       - name: Attach linux mips64le Build to Release
         uses: actions/upload-release-asset@v1
@@ -180,8 +180,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: evanotebook-relay-linux-mips64le.exe
-          asset_name: evanotebook-relay-linux-mips64le.exe
+          asset_path: evanotebook-relay-linux-mips64le
+          asset_name: evanotebook-relay-linux-mips64le
           asset_content_type: application/octet-stream
       - name: Attach linux ppc64 Build to Release
         uses: actions/upload-release-asset@v1
@@ -189,8 +189,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: evanotebook-relay-linux-ppc64.exe
-          asset_name: evanotebook-relay-linux-ppc64.exe
+          asset_path: evanotebook-relay-linux-ppc64
+          asset_name: evanotebook-relay-linux-ppc64
           asset_content_type: application/octet-stream
       - name: Attach linux riscv64 Build to Release
         uses: actions/upload-release-asset@v1
@@ -198,8 +198,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: evanotebook-relay-linux-riscv64.exe
-          asset_name: evanotebook-relay-linux-riscv64.exe
+          asset_path: evanotebook-relay-linux-riscv64
+          asset_name: evanotebook-relay-linux-riscv64
           asset_content_type: application/octet-stream
       - name: Attach windows 386 Build to Release
         uses: actions/upload-release-asset@v1
