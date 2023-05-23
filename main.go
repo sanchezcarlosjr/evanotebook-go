@@ -22,9 +22,18 @@ type Command struct {
 	Command string `json:"command"`
 }
 
-type Response struct {
+type ShellResponse struct {
 	Stdout string `json:"stdout"`
 	Stderr  string `json:"stderr,omitempty"`
+}
+
+type PlatformResponse struct {
+	GOOS string `json:"os"`
+	GOARCH string `json:"arch"`
+}
+
+type TokenResponse struct {
+	Token string `json:"token"`
 }
 
 var signingKey []byte
@@ -97,6 +106,28 @@ func checkAuth(ctx iris.Context) {
 	ctx.Next()
 }
 
+func retrievePlatformInfo(ctx iris.Context) {
+	response := PlatformResponse{
+		GOOS: runtime.GOOS,
+		GOARCH: runtime.GOARCH,
+	}
+	ctx.JSON(response)
+}
+
+
+func retrieveNewToken(ctx iris.Context) {
+	tokenString, err := generateToken(signingKey)
+	if err != nil {
+		ctx.StatusCode(http.StatusBadRequest)
+		ctx.WriteString(err.Error())
+		return
+	}
+	response := TokenResponse{
+		Token: tokenString,
+	}
+	ctx.JSON(response)
+}
+
 func execShell(ctx iris.Context) {
 	var cmd Command
 	if err := ctx.ReadJSON(&cmd); err != nil {
@@ -113,7 +144,7 @@ func execShell(ctx iris.Context) {
 		stdout, err = exec.Command("/bin/sh", "-c", cmd.Command).Output()
 	}
 
-	response := Response{
+	response := ShellResponse{
 		Stdout: string(bytes.TrimSpace(stdout)),
 	}
 
@@ -141,6 +172,8 @@ func writeDocs(url string) {
 	w.Init(os.Stdout, 0, 8, 2, '\t', 0)
 	fmt.Fprintln(w, "URL\tMethod\tContent-Type\tbody\t")
 	fmt.Fprintln(w, "http://"+url+"/v1/shell\tPOST\tJSON\t{command: string}\t")
+	fmt.Fprintln(w, "http://"+url+"/v1/newToken\tGET\tJSON\t{token: string}\t")
+	fmt.Fprintln(w, "http://"+url+"/v1/platformInfo\tGET\tJSON\t{arch: string; os: string;}\t")
 	w.Flush()
 }
 
@@ -172,6 +205,8 @@ func main() {
 	v1 := app.Party("/v1")
     {
         v1.Post("/shell", execShell)
+		v1.Get("/newToken", retrieveNewToken)
+		v1.Get("/platformInfo", retrievePlatformInfo)
     }
 
 	url := "localhost:8382"
